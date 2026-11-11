@@ -1,0 +1,4 @@
+# tenants/team-a/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata: { name: team-b }

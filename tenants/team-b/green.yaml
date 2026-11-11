@@ -1,0 +1,5 @@
+# tenants/team-a/blue.yaml
+apiVersion: lab.example.org/v1alpha1
+kind: App
+metadata: { name: green, namespace: team-b }
+spec: { image: "traefik/whoami:v1.10", host: green.localhost, replicas: 2 }
