@@ -25,7 +25,7 @@ spec:
                     spec:
                       selector: { matchLabels: { app: PLACEHOLDER } }
                       template:
-                        metadata: { labels: { app: PLACEHOLDER } }
+                        metadata: { labels: { app: PLACEHOLDER, managed-by: crossplane } }
                         spec:
                           containers:
                             - name: app
