@@ -1,0 +1,28 @@
+# platform/apis/app/definition.yaml
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata: { name: apps.lab.example.org }
+spec:
+  scope: Namespaced            # Crossplane v2 default: XRs live in the tenant's namespace, no Claims needed
+  group: lab.example.org
+  names: { kind: App, plural: apps }
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [image, host]
+              properties:
+                image:    { type: string, description: "Container image, e.g. nginx:1.27" }
+                host:     { type: string, description: "Hostname served by Traefik, e.g. blue.localhost" }
+                replicas: { type: integer, default: 1, minimum: 1, maximum: 5 }
+            status:
+              type: object
+              properties:
+                url: { type: string }
+

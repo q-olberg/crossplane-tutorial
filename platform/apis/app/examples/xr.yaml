@@ -1,0 +1,6 @@
+# platform/apis/app/examples/xr.yaml
+apiVersion: lab.example.org/v1alpha1
+kind: App
+metadata: { name: blue, namespace: team-a }
+spec: { image: "traefik/whoami:v1.10", host: blue.localhost, replicas: 2 }
+

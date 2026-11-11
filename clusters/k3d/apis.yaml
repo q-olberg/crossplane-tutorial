@@ -1,0 +1,16 @@
+# clusters/k3d/apis.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: apis, namespace: flux-system }
+spec:
+  interval: 10m
+  path: ./platform/apis
+  prune: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+  dependsOn: [{ name: configs }]
+  healthChecks:
+    - { apiVersion: apiextensions.crossplane.io/v2, kind: CompositeResourceDefinition, name: apps.lab.example.org }
+  healthCheckExprs:
+    - apiVersion: apiextensions.crossplane.io/v2
+      kind: CompositeResourceDefinition
+      current: status.conditions.filter(c, c.type == 'Established').all(c, c.status == 'True')

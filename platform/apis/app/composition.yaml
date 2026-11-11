@@ -1,0 +1,89 @@
+# platform/apis/app/composition.yaml
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata: { name: app-k8s }
+spec:
+  compositeTypeRef: { apiVersion: lab.example.org/v1alpha1, kind: App }
+  mode: Pipeline
+  pipeline:
+    - step: render
+      functionRef: { name: function-patch-and-transform }
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: deployment
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              spec:
+                providerConfigRef: { kind: ClusterProviderConfig, name: default }
+                forProvider:
+                  manifest:
+                    apiVersion: apps/v1
+                    kind: Deployment
+                    spec:
+                      selector: { matchLabels: { app: PLACEHOLDER } }
+                      template:
+                        metadata: { labels: { app: PLACEHOLDER } }
+                        spec:
+                          containers:
+                            - name: app
+                              image: PLACEHOLDER
+                              ports: [{ containerPort: 80 }]
+            patches:
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.name,      toFieldPath: spec.forProvider.manifest.metadata.name }
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.namespace, toFieldPath: spec.forProvider.manifest.metadata.namespace }
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.name,      toFieldPath: spec.forProvider.manifest.spec.selector.matchLabels.app }
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.name,      toFieldPath: spec.forProvider.manifest.spec.template.metadata.labels.app }
+              - { type: FromCompositeFieldPath, fromFieldPath: spec.image,         toFieldPath: "spec.forProvider.manifest.spec.template.spec.containers[0].image" }
+              - { type: FromCompositeFieldPath, fromFieldPath: spec.replicas,      toFieldPath: spec.forProvider.manifest.spec.replicas }
+          - name: service
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              spec:
+                providerConfigRef: { kind: ClusterProviderConfig, name: default }
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: Service
+                    spec:
+                      ports: [{ port: 80, targetPort: 80 }]
+            patches:
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.name,      toFieldPath: spec.forProvider.manifest.metadata.name }
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.namespace, toFieldPath: spec.forProvider.manifest.metadata.namespace }
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.name,      toFieldPath: spec.forProvider.manifest.spec.selector.app }
+          - name: ingress
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              spec:
+                providerConfigRef: { kind: ClusterProviderConfig, name: default }
+                forProvider:
+                  manifest:
+                    apiVersion: networking.k8s.io/v1
+                    kind: Ingress
+                    spec:
+                      ingressClassName: traefik
+                      rules:
+                        - host: PLACEHOLDER
+                          http:
+                            paths:
+                              - path: /
+                                pathType: Prefix
+                                backend: { service: { name: PLACEHOLDER, port: { number: 80 } } }
+            patches:
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.name,      toFieldPath: spec.forProvider.manifest.metadata.name }
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.namespace, toFieldPath: spec.forProvider.manifest.metadata.namespace }
+              - { type: FromCompositeFieldPath, fromFieldPath: spec.host,          toFieldPath: "spec.forProvider.manifest.spec.rules[0].host" }
+              - { type: FromCompositeFieldPath, fromFieldPath: metadata.name,      toFieldPath: "spec.forProvider.manifest.spec.rules[0].http.paths[0].backend.service.name" }
+              - type: ToCompositeFieldPath
+                fromFieldPath: "spec.forProvider.manifest.spec.rules[0].host"
+                toFieldPath: status.url
+                transforms:
+                  - type: string
+                    string: { type: Format, fmt: "http://%s" }
+    - step: ready
+      functionRef: { name: function-auto-ready }
+
