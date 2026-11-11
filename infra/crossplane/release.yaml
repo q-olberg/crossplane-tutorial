@@ -1,0 +1,15 @@
+---
+# infra/crossplane/release.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata: { name: crossplane, namespace: flux-system }
+spec:
+  interval: 10m
+  targetNamespace: crossplane-system
+  install: { createNamespace: true }
+  chart:
+    spec:
+      chart: crossplane
+      version: "2.x"
+      sourceRef: { kind: HelmRepository, name: crossplane-stable }
+

@@ -1,0 +1,11 @@
+# clusters/k3d/crossplane.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: crossplane, namespace: flux-system }
+spec:
+  interval: 10m
+  path: ./infra/crossplane
+  prune: true
+  wait: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+
