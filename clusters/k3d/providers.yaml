@@ -1,0 +1,18 @@
+# clusters/k3d/providers.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata: { name: providers, namespace: flux-system }
+spec:
+  interval: 10m
+  path: ./infra/providers
+  prune: true
+  sourceRef: { kind: GitRepository, name: flux-system }
+  dependsOn: [{ name: crossplane }]
+  healthChecks:
+    - { apiVersion: pkg.crossplane.io/v1, kind: Provider, name: provider-kubernetes }
+    - { apiVersion: pkg.crossplane.io/v1, kind: Provider, name: provider-helm }
+  healthCheckExprs:
+    - apiVersion: pkg.crossplane.io/v1
+      kind: Provider
+      current: status.conditions.filter(c, c.type == 'Healthy').all(c, c.status == 'True')
+

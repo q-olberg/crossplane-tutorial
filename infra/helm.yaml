@@ -1,0 +1,8 @@
+---
+# infra/configs/helm.yaml
+apiVersion: helm.m.crossplane.io/v1beta1
+kind: ClusterProviderConfig
+metadata: { name: default }
+spec:
+  credentials: { source: InjectedIdentity }
+
